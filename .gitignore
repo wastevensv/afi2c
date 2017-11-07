@@ -1,3 +1,7 @@
+#Custom
+bin/
+obj/
+
 # Prerequisites
 *.d
 
