@@ -29,6 +29,7 @@ struct afi_Entry {
 };
 
 struct afi_Stack {
+	size_t    size;
 	afi_int_t *top;
 	afi_int_t data[];
 };
@@ -49,7 +50,13 @@ afi_Node *afi_addEntry(afi_Node *dict, afi_Entry *entry);
 
 afi_Node *afi_newNode();
 
-#define AFI_PUSH(stack,data) {stack.top = data;}
-#define AFI_POP(stack) (*stack.top++);
+afi_State *afi_initState(size_t stack_size);
+void afi_freeState(afi_State *state);
+void afi_freeDict(afi_Node *head);
+
+#define PUSH(stack,data) {if(SIZE(stack) < stack->size) { *(stack->top++) = data; }}
+#define SIZE(stack) (stack->top - stack->data)
+#define POP(stack) ((SIZE(stack) > 0) ? *(--stack->top) : 0)
+#define PEEK(stack) (*(stack->top))
 
 #endif

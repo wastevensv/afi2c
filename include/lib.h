@@ -2,6 +2,6 @@
 #define _LIB_H_
 #include "afi.h" 
 
-void do_ident(afi_Entry *self, afi_State *state);
+afi_Node *lib_initDict(afi_Node *dict);
 
 #endif

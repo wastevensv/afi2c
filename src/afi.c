@@ -13,9 +13,15 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 				afi_Entry *word = afi_find(state->dict, tok);
 				if(word == NULL)
 				{
-					return -2;
+					char *end;
+					afi_int_t literal = strtol(tok,&end,10);
+					if(end == tok) {
+						return i;
+					}
+					PUSH(state->args,literal);
+				} else {
+					word->codeword(word,state);
 				}
-				word->codeword(word,state);
 			}
 			word_start = i+1;
 		}
@@ -23,7 +29,7 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 		{
 			if(i - word_start >= AFI_NAME_LEN)
 			{
-				return -1;
+				return i;
 			}
 			tok[i - word_start] = buf[i];
 			word_end = i+1;
@@ -74,4 +80,33 @@ afi_Node *afi_newNode() {
 	head->prev = NULL;
 	head->entry = NULL;
 	return head;
+}
+
+afi_Stack *afi_newStack(size_t stack_size) {
+	afi_Stack *stack = malloc(sizeof(afi_Stack) + sizeof(afi_int_t) * stack_size);
+	stack->top = stack->data;
+	stack->size = stack_size;
+	return stack;
+}
+
+afi_State *afi_initState(size_t stack_size) {
+	afi_State *state = malloc(sizeof(afi_State));
+	state->args = afi_newStack(stack_size);
+	state->dict = afi_newNode();
+	return state;
+}
+
+void afi_freeState(afi_State *state) {
+	free(state->args);
+	afi_freeDict(state->dict);
+	free(state);
+}
+
+void afi_freeDict(afi_Node *head) {
+	while(head != NULL) {
+		afi_Node *curr = head;
+		head = head->prev;
+		free(curr->entry);
+		free(curr);
+	}
 }
