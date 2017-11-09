@@ -5,8 +5,22 @@ OBJ_DIR=obj
 BIN_DIR=bin
 
 CFLAGS=-Iinclude/
-LDFLAGS=-lc
+
+ifndef RELEASE
+CFLAGS+=-fsanitize=address -ggdb
+else
+CFLAGS+=-s
+endif
+
+LDFLAGS=-lc -lreadline
+ifndef RELEASE
+LDFLAGS+=-fsanitize=address
+endif
+
 OBJS=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
+
+.PHONY: all
+all: $(BIN_DIR)/afi $(BIN_DIR)/afi.a
 
 $(BIN_DIR)/afi: $(OBJS) $(OBJ_DIR)/hw/linux.o
 	@mkdir -p bin
