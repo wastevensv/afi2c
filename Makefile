@@ -1,10 +1,12 @@
 CC:=gcc
+TARGET:=linux
 
 SRC_DIR=src
 OBJ_DIR=obj
 BIN_DIR=bin
 
-CFLAGS=-Iinclude/
+CFLAGS=-Iinclude/ -Iinclude/hw/$(TARGET)
+CFLAGS+=-MMD
 
 ifndef RELEASE
 CFLAGS+=-fsanitize=address -ggdb
@@ -18,11 +20,12 @@ LDFLAGS+=-fsanitize=address
 endif
 
 OBJS=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
+HWOBJS=$(patsubst $(SRC_DIR)/hw/$(TARGET)/%.c,$(OBJ_DIR)/hw/$(TARGET)/%.o,$(wildcard $(SRC_DIR)/hw/$(TARGET)/*.c))
 
-.PHONY: all
-all: $(BIN_DIR)/afi $(BIN_DIR)/afi.a
+.PHONY: all clean clean-all
+all: $(BIN_DIR)/afi
 
-$(BIN_DIR)/afi: $(OBJS) $(OBJ_DIR)/hw/linux.o
+$(BIN_DIR)/afi: $(HWOBJS) $(BIN_DIR)/afi.a
 	@mkdir -p bin
 	$(CC) $(LDFLAGS) -o $@ $^
 
@@ -31,8 +34,16 @@ $(BIN_DIR)/afi.a: $(OBJS)
 	$(AR) rcs $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	@mkdir -p obj/hw/
+	@mkdir -p obj/
 	$(CC)  $(CFLAGS) -c $< -o $@
-$(OBJ_DIR)/hw/%.o: $(SRC_DIR)/hw/%.c
-	@mkdir -p obj/hw/
+$(OBJ_DIR)/hw/$(TARGET)/%.o: $(SRC_DIR)/hw/$(TARGET)/%.c
+	@mkdir -p obj/hw/$(TARGET)
 	$(CC)  $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -rf obj/
+
+clean-all: clean
+	rm -rf bin/
+
+-include $(OBJS:.o=.d)

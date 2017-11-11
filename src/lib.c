@@ -33,13 +33,13 @@ void do_div(afi_Entry *self, afi_State *state) {
 void do_size(afi_Entry *self, afi_State *state) {
 	char str[16];
 	sprintf(str, "%ld", SIZE(state->args));
-	puts(str);
+	AFI_PUTS(str);
 }
 
 void do_dotd(afi_Entry *self, afi_State *state) {
 	char str[16];
 	sprintf(str, "%d", PEEK(state->args));
-	puts(str);
+	AFI_PUTS(str);
 }
 
 void do_pop(afi_Entry *self, afi_State *state) {

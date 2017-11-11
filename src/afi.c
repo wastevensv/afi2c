@@ -1,4 +1,6 @@
 #include "afi.h"
+#include <stdlib.h>
+#include <string.h>
 
 void docol(afi_Entry *self, afi_State *state) {
 	for(int i=0; i<self->numwords; i++) {
