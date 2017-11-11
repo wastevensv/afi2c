@@ -1,5 +1,19 @@
 #include "afi.h"
 
+void docol(afi_Entry *self, afi_State *state) {
+	for(int i=0; i<self->numwords; i++) {
+		afi_Entry *curr_word = self->words[i];
+		if(curr_word->codeword == NULL)
+		{
+			PUSH(state->args,curr_word->literal);
+		}
+		else
+		{
+			curr_word->codeword(curr_word,state);
+		}
+	}
+}
+
 int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 	char tok[AFI_NAME_LEN+1];
 	int word_start = 0;
@@ -8,14 +22,16 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 	{
 		if((buf[i] == ' ' || buf[i] == 0))
 		{
-			if(word_end == i) {
+			if(word_end == i)
+			{
 				tok[i - word_start] = 0;
 				afi_Entry *word = afi_find(state->dict, tok);
 				if(word == NULL)
 				{
 					char *end;
 					afi_int_t literal = strtol(tok,&end,10);
-					if(end == tok) {
+					if(end == tok)
+					{
 						return i;
 					}
 					PUSH(state->args,literal);
@@ -55,15 +71,28 @@ afi_Entry *afi_find(afi_Node *dict, const char *name) {
 afi_Entry *afi_defEntry(const char *name, afi_Word *codeword,
 					   size_t num_words) {
 	// malloc entry header + array of words
-	afi_Entry *entry = malloc(sizeof(afi_Entry) + sizeof(afi_Word) * num_words);
-	
+	afi_Entry *entry = malloc(sizeof(afi_Entry) + (sizeof(afi_Entry*) * num_words));
+
 	// Copy word name.
 	strncpy(entry->name, name, AFI_NAME_LEN);
 
-	entry->flags = 0;
-	
+	entry->literal = 0;
+	entry->numwords = num_words;
+
 	// Set codeword pointer.
 	entry->codeword = codeword;
+
+	return entry;
+}
+
+afi_Entry *afi_defLiteral(afi_int_t literal) {
+	// malloc entry header + array of words
+	afi_Entry *entry = malloc(sizeof(afi_Entry));
+
+	entry->literal = literal;
+
+	// Set codeword pointer.
+	entry->codeword = NULL;
 
 	return entry;
 }
@@ -103,7 +132,8 @@ void afi_freeState(afi_State *state) {
 }
 
 void afi_freeDict(afi_Node *head) {
-	while(head != NULL) {
+	while(head != NULL)
+	{
 		afi_Node *curr = head;
 		head = head->prev;
 		free(curr->entry);

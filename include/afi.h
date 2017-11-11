@@ -23,8 +23,9 @@ struct afi_State {
 
 struct afi_Entry {
 	char name[AFI_NAME_LEN+1];
-	uint8_t flags; // Unused.
+	afi_int_t literal; // Used for passing literals to docol.
 	afi_Word* codeword;
+	afi_int_t numwords;
 	afi_Entry* words[];
 };
 
@@ -43,6 +44,7 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen);
 
 afi_Entry *afi_find(afi_Node *dict, const char *name);
 
+afi_Entry *afi_defLiteral(afi_int_t literal);
 afi_Entry *afi_defEntry(const char *name, afi_Word *codeword,
 					   size_t num_words);
 
@@ -54,9 +56,11 @@ afi_State *afi_initState(size_t stack_size);
 void afi_freeState(afi_State *state);
 void afi_freeDict(afi_Node *head);
 
+void docol(afi_Entry *self, afi_State *state);
+
 #define PUSH(stack,data) {if(SIZE(stack) < stack->size) { *(stack->top++) = data; }}
 #define SIZE(stack) (stack->top - stack->data)
-#define POP(stack) ((SIZE(stack) > 0) ? *(--stack->top) : 0)
-#define PEEK(stack) (*(stack->top))
+#define POP(stack)  ((SIZE(stack) > 0) ? *(--stack->top) : 0)
+#define PEEK(stack) ((SIZE(stack) > 0) ? *(stack->top) : 0)
 
 #endif
