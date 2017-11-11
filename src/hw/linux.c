@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <readline/readline.h>
+#include <readline/history.h>
 
 #define STACK_SIZE 32
 
@@ -21,14 +22,16 @@ int main(int argc, char *argv) {
 			break;
 		}
 		int err = afi_exec(state, line, strlen(line));
-		free(line);
 		if(err > 0) {
 			for(;err>=0;err--)
 			{
 				printf(" ");
 			}
 			printf("^\n");
+		} else {
+			add_history(line);
 		}
+		free(line);
 	}
 
 	afi_freeState(state);
