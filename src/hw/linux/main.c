@@ -1,7 +1,6 @@
 #include "afi.h"
 #include "lib.h"
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
