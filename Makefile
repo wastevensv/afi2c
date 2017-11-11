@@ -8,10 +8,10 @@ BIN_DIR=bin
 CFLAGS=-Iinclude/ -Iinclude/hw/$(TARGET)
 CFLAGS+=-MMD
 
-ifndef RELEASE
-CFLAGS+=-fsanitize=address -ggdb
-else
+ifdef RELEASE
 CFLAGS+=-s
+else
+CFLAGS+=-fsanitize=address -ggdb
 endif
 
 LDFLAGS=-lc -lreadline
@@ -23,9 +23,9 @@ OBJS=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
 HWOBJS=$(patsubst $(SRC_DIR)/hw/$(TARGET)/%.c,$(OBJ_DIR)/hw/$(TARGET)/%.o,$(wildcard $(SRC_DIR)/hw/$(TARGET)/*.c))
 
 .PHONY: all clean clean-all
-all: $(BIN_DIR)/afi
+all: $(BIN_DIR)/$(TARGET)
 
-$(BIN_DIR)/afi: $(HWOBJS) $(BIN_DIR)/afi.a
+$(BIN_DIR)/$(TARGET): $(HWOBJS) $(BIN_DIR)/afi.a
 	@mkdir -p bin
 	$(CC) $(LDFLAGS) -o $@ $^
 
