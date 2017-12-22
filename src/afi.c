@@ -41,7 +41,7 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 		}
 		else // If non-whitespace.
 		{
-			if(rd - word_start >= AFI_NAME_LEN)
+			if(rd - word_start >= AFI_NAME_LEN) // If word is too long.
 			{
 				return rd;
 			}
@@ -49,6 +49,7 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 			word_end = rd+1;
 		}
 	}
+	if(toks[0] == '\0') return 0; // Trivial success if empty string.
 	afi_Entry *line_word = afi_defCompound("", num_toks);
 	char *cur_tok = toks;
 	for(int t = 0; t < num_toks; t++)
@@ -58,9 +59,10 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 		{
 			char *end;
 			afi_int_t literal = strtol(cur_tok,&end,10);
-			if(end == cur_tok)
+			if(end == cur_tok) // If invalid token
 			{
-				return t;
+				free(line_word);
+				return -(t+1);
 			}
 			word = afi_defLiteral(literal);
 			state->dict = afi_addEntry(state->dict, word);

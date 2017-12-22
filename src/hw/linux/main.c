@@ -27,6 +27,8 @@ int main(int argc, char *argv) {
 				printf(" ");
 			}
 			printf("^\n");
+		} else if(err < 0) {
+			printf("Invalid token. Number: %d\n", -err);
 		} else {
 			add_history(line);
 		}
