@@ -61,6 +61,14 @@ int run_tests(afi_State *state) {
 	fails += afi_assert(state,
 						"2 2 + 3 *",
 						0,exp_stack,1);
+	exp_stack[0] = 0;
+	fails += afi_assert(state,
+						"4 4 - ZBRANCH2 1 BRANCH1 0",
+						0,exp_stack,1);
+	exp_stack[0] = 1;
+	fails += afi_assert(state,
+						"4 2 - ZBRANCH2 1 BRANCH1 0",
+						0,exp_stack,1);
 	return fails;
 }
 
