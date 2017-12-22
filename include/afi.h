@@ -61,7 +61,7 @@ void docol(afi_Entry *self, afi_State *state);
 #define PUSH(stack,data) {if(SIZE(stack) < stack->size) { *(stack->top++) = data; }}
 #define SIZE(stack) (stack->top - stack->data)
 #define POP(stack)  ((SIZE(stack) > 0) ? *(--stack->top) : 0)
-#define PEEK(stack) ((SIZE(stack) > 0) ? *(stack->top) : 0)
+#define PEEK(stack) ((SIZE(stack) > 0) ? *((stack->top)-1) : 0)
 #define STACK_RESET(stack) {stack->top = stack->data;}
 
 #endif
