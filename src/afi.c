@@ -15,7 +15,10 @@ void docol(afi_Entry *self, afi_State *state) {
 			docol(curr_word,state);
 			break;
 		case AFI_T_UBRN:
+			i += curr_word->offset;
+			break;
 		case AFI_T_CBRN:
+			if(POP(state->args) == 0) i+= curr_word->offset;
 			break;
 		default:
 			break;
@@ -55,7 +58,17 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 	for(int t = 0; t < num_toks; t++)
 	{
 		afi_Entry *word = afi_find(state->dict, cur_tok);
-		if(word == NULL)
+		if(strncmp(cur_tok,"BRANCH",6) == 0)
+		{
+			word = afi_defBranch(strtol(cur_tok+6,NULL,10),false);
+			state->dict = afi_addEntry(state->dict, word);
+		}
+		else if(strncmp(cur_tok,"ZBRANCH",7) == 0)
+		{
+			word = afi_defBranch(strtol(cur_tok+7,NULL,10),true);
+			state->dict = afi_addEntry(state->dict, word);
+		}
+		else if(word == NULL)
 		{
 			char *end;
 			afi_int_t literal = strtol(cur_tok,&end,10);
