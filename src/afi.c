@@ -51,7 +51,8 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 	}
 	afi_Entry *line_word = afi_defCompound("", num_toks);
 	char *cur_tok = toks;
-	for(int t = 0; t < num_toks; t++) {
+	for(int t = 0; t < num_toks; t++)
+	{
 		afi_Entry *word = afi_find(state->dict, cur_tok);
 		if(word == NULL)
 		{
@@ -77,9 +78,12 @@ afi_Entry *afi_find(afi_Node *dict, const char *name) {
 	while(curr_node->entry != NULL)
 	{
 		afi_Entry *curr_entry = curr_node->entry;
-		if(strncmp(curr_entry->name,name,AFI_NAME_LEN) == 0)
+		if(curr_entry->type == AFI_T_PRIM || curr_entry->type == AFI_T_COMP)
 		{
-			return curr_entry;
+			if(strncmp(curr_entry->name,name,AFI_NAME_LEN) == 0)
+			{
+				return curr_entry;
+			}
 		}
 		curr_node = curr_node->prev;
 	}
@@ -120,9 +124,12 @@ afi_Entry *afi_defBranch(size_t offset, bool cond) {
 	// malloc entry header
 	afi_Entry *entry = malloc(sizeof(afi_Entry));
 
-	if(cond) {
+	if(cond)
+	{
 		entry->type = AFI_T_CBRN;
-	} else {
+	}
+	else
+	{
 		entry->type = AFI_T_UBRN;
 	}
 
