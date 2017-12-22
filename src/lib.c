@@ -42,19 +42,24 @@ void do_dotd(afi_Entry *self, afi_State *state) {
 	AFI_PUTS(str);
 }
 
-void do_pop(afi_Entry *self, afi_State *state) {
+void do_drop(afi_Entry *self, afi_State *state) {
 	POP(state->args);
 }
 
 afi_Node *lib_initDict(afi_Node *dict) {
-	afi_Entry *add  = afi_defEntry("+",    do_add,  0);
-	afi_Entry *sub  = afi_defEntry("-",    do_sub,  0);
-	afi_Entry *mul  = afi_defEntry("*",    do_mul,  0);
-	afi_Entry *div  = afi_defEntry("/",    do_div,  0);
-	afi_Entry *size = afi_defEntry("SIZE", do_size, 0);
-	afi_Entry *dot  = afi_defEntry(".",    do_dotd, 0);
-	afi_Entry *dotd = afi_defEntry(".D",   do_dotd, 0);
-	afi_Entry *pop  = afi_defEntry("POP",  do_pop,  0);
+	afi_Entry *add  = afi_defPrimitive("+",    do_add);
+	afi_Entry *sub  = afi_defPrimitive("-",    do_sub);
+	afi_Entry *mul  = afi_defPrimitive("*",    do_mul);
+	afi_Entry *div  = afi_defPrimitive("/",    do_div);
+	afi_Entry *size = afi_defPrimitive("SIZE", do_size);
+	afi_Entry *dot  = afi_defPrimitive(".",    do_dotd);
+	afi_Entry *dotd = afi_defPrimitive(".D",   do_dotd);
+	afi_Entry *peek = afi_defPrimitive("PEEK",   do_dotd);
+	afi_Entry *drop = afi_defPrimitive("DROP",   do_drop);
+	afi_Entry *pop  = afi_defCompound("POP",  2);
+
+	pop->words[0] = dot;
+	pop->words[1] = drop;
 
 	dict = afi_addEntry(dict, add);
 	dict = afi_addEntry(dict, sub);
@@ -63,6 +68,8 @@ afi_Node *lib_initDict(afi_Node *dict) {
 	dict = afi_addEntry(dict, size);
 	dict = afi_addEntry(dict, dot);
 	dict = afi_addEntry(dict, dotd);
+	dict = afi_addEntry(dict, peek);
+	dict = afi_addEntry(dict, drop);
 	dict = afi_addEntry(dict, pop);
 
 	return dict;

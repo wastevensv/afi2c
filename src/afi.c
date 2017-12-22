@@ -1,58 +1,74 @@
 #include "afi.h"
-#include <stdlib.h>
 #include <string.h>
 
 void docol(afi_Entry *self, afi_State *state) {
 	for(int i=0; i<self->numwords; i++) {
 		afi_Entry *curr_word = self->words[i];
-		if(curr_word->codeword == NULL)
-		{
+		switch(curr_word->type) {
+		case AFI_T_LITR:
 			PUSH(state->args,curr_word->literal);
-		}
-		else
-		{
+			break;
+		case AFI_T_PRIM:
 			curr_word->codeword(curr_word,state);
+			break;
+		case AFI_T_COMP:
+			docol(curr_word,state);
+			break;
+		case AFI_T_UBRN:
+		case AFI_T_CBRN:
+			break;
+		default:
+			break;
 		}
 	}
 }
 
 int afi_exec(afi_State *state, const char *buf, size_t buflen) {
-	char tok[AFI_NAME_LEN+1];
+	char toks[buflen];
+	size_t num_toks = 0;
 	int word_start = 0;
 	int word_end = 0;
-	for(int i=0; i<buflen+1; i++)
+	for(int wr = 0, rd=0; rd<buflen+1; rd++)
 	{
-		if((buf[i] == ' ' || buf[i] == 0))
+		if((buf[rd] == ' ' || buf[rd] == 0)) // If whitespace found
 		{
-			if(word_end == i)
+			if(word_end == rd) // If first whitespace after word end
 			{
-				tok[i - word_start] = 0;
-				afi_Entry *word = afi_find(state->dict, tok);
-				if(word == NULL)
-				{
-					char *end;
-					afi_int_t literal = strtol(tok,&end,10);
-					if(end == tok)
-					{
-						return i;
-					}
-					PUSH(state->args,literal);
-				} else {
-					word->codeword(word,state);
-				}
+				toks[wr++] = '\0'; // Mark end of token.
+				num_toks += 1;
 			}
-			word_start = i+1;
+			word_start = rd+1;
 		}
-		else
+		else // If non-whitespace.
 		{
-			if(i - word_start >= AFI_NAME_LEN)
+			if(rd - word_start >= AFI_NAME_LEN)
 			{
-				return i;
+				return rd;
 			}
-			tok[i - word_start] = buf[i];
-			word_end = i+1;
+			toks[wr++] = buf[rd];
+			word_end = rd+1;
 		}
 	}
+	afi_Entry *line_word = afi_defCompound("", num_toks);
+	char *cur_tok = toks;
+	for(int t = 0; t < num_toks; t++) {
+		afi_Entry *word = afi_find(state->dict, cur_tok);
+		if(word == NULL)
+		{
+			char *end;
+			afi_int_t literal = strtol(cur_tok,&end,10);
+			if(end == cur_tok)
+			{
+				return t;
+			}
+			word = afi_defLiteral(literal);
+			state->dict = afi_addEntry(state->dict, word);
+		}
+		line_word->words[t] = word;
+		cur_tok += strlen(cur_tok) + 1;
+	}
+	docol(line_word, state);
+	free(line_word);
 	return 0;
 }
 
@@ -70,16 +86,14 @@ afi_Entry *afi_find(afi_Node *dict, const char *name) {
 	return NULL;
 }
 
-afi_Entry *afi_defEntry(const char *name, afi_Word *codeword,
-					   size_t num_words) {
-	// malloc entry header + array of words
-	afi_Entry *entry = malloc(sizeof(afi_Entry) + (sizeof(afi_Entry*) * num_words));
+afi_Entry *afi_defPrimitive(const char *name, afi_Word *codeword) {
+	// malloc entry
+	afi_Entry *entry = malloc(sizeof(afi_Entry));
 
 	// Copy word name.
 	strncpy(entry->name, name, AFI_NAME_LEN);
 
-	entry->literal = 0;
-	entry->numwords = num_words;
+	entry->type = AFI_T_PRIM;
 
 	// Set codeword pointer.
 	entry->codeword = codeword;
@@ -87,14 +101,43 @@ afi_Entry *afi_defEntry(const char *name, afi_Word *codeword,
 	return entry;
 }
 
-afi_Entry *afi_defLiteral(afi_int_t literal) {
+afi_Entry *afi_defCompound(const char *name, size_t num_words) {
 	// malloc entry header + array of words
+	afi_Entry *entry = malloc(sizeof(afi_Entry) + (sizeof(afi_Entry*) * num_words));
+
+	// Copy word name.
+	strncpy(entry->name, name, AFI_NAME_LEN);
+
+	entry->numwords = num_words;
+
+	// Set codeword type.
+	entry->type = AFI_T_COMP;
+
+	return entry;
+}
+
+afi_Entry *afi_defBranch(size_t offset, bool cond) {
+	// malloc entry header
 	afi_Entry *entry = malloc(sizeof(afi_Entry));
 
-	entry->literal = literal;
+	if(cond) {
+		entry->type = AFI_T_CBRN;
+	} else {
+		entry->type = AFI_T_UBRN;
+	}
 
-	// Set codeword pointer.
-	entry->codeword = NULL;
+	entry->offset = offset;
+
+	return entry;
+}
+
+afi_Entry *afi_defLiteral(afi_int_t literal) {
+	// malloc entry header
+	afi_Entry *entry = malloc(sizeof(afi_Entry));
+
+	entry->type = AFI_T_LITR;
+
+	entry->literal = literal;
 
 	return entry;
 }
