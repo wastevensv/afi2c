@@ -27,7 +27,7 @@ all: $(BIN_DIR)/$(TARGET)
 
 $(BIN_DIR)/$(TARGET): $(HWOBJS) $(BIN_DIR)/afi.a
 	@mkdir -p bin
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 $(BIN_DIR)/afi.a: $(OBJS)
 	@mkdir -p bin
