@@ -64,6 +64,7 @@ afi_Entry *afi_defBranch(size_t offset, bool cond);
 afi_Node *afi_addEntry(afi_Node *dict, afi_Entry *entry);
 
 afi_Node *afi_newNode();
+afi_Stack *afi_newStack(size_t stack_size);
 
 afi_State *afi_initState(size_t stack_size);
 void afi_freeState(afi_State *state);

@@ -1,6 +1,10 @@
 #include "afi.h"
 #include <string.h>
 
+void do_nop(afi_Entry *self, afi_State *state) {
+	return;
+}
+
 void docol(afi_Entry *self, afi_State *state) {
 	for(int i=0; i<self->numwords; i++) {
 		afi_Entry *curr_word = self->words[i];
@@ -31,7 +35,7 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 	size_t num_toks = 0;
 	int word_start = 0;
 	int word_end = 0;
-	for(int wr = 0, rd=0; rd<buflen+1; rd++)
+	for(int wr = 0, rd=0; rd<buflen+1; rd++) // Parse and tokenize.
 	{
 		if((buf[rd] == ' ' || buf[rd] == 0)) // If whitespace found
 		{
@@ -53,9 +57,11 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 		}
 	}
 	if(toks[0] == '\0') return 0; // Trivial success if empty string.
+
+	afi_Stack *branches = afi_newStack(num_toks);
 	afi_Entry *line_word = afi_defCompound("", num_toks);
 	char *cur_tok = toks;
-	for(int t = 0; t < num_toks; t++)
+	for(afi_int_t t = 0; t < num_toks; t++) // Symbol Lookup
 	{
 		afi_Entry *word = afi_find(state->dict, cur_tok);
 		if(strncmp(cur_tok,"BRANCH",6) == 0)
@@ -68,6 +74,45 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 			word = afi_defBranch(strtol(cur_tok+7,NULL,10),true);
 			state->dict = afi_addEntry(state->dict, word);
 		}
+		else if(strcmp(cur_tok,"IF") == 0)
+		{
+			// Push location of IF onto stack.
+			PUSH(branches, t);
+			// Insert placeholder cond. branch in line_word.
+			word = afi_defBranch(0,true);
+			state->dict = afi_addEntry(state->dict, word);
+		}
+		else if(strcmp(cur_tok,"ELSE") == 0)
+		{
+			// Modify placeholder cond. branch to have proper offset.
+			if(SIZE(branches) < 1)
+			{
+				free(line_word);
+				free(branches);
+				return -(t+1);
+			}
+			afi_int_t if_loc = POP(branches);
+			line_word->words[if_loc]->offset = t - if_loc;
+			// Push location of ELSE onto stack.
+			PUSH(branches, t);
+			// Insert placeholder uncond. branch in line_word.
+			word = afi_defBranch(0,false);
+			state->dict = afi_addEntry(state->dict, word);
+		}
+		else if(strcmp(cur_tok,"END") == 0)
+		{
+			// Modify placeholder cond. branch to have proper offset.
+			if(SIZE(branches) < 1)
+			{
+				free(line_word);
+				free(branches);
+				return -(t+1);
+			}
+			afi_int_t else_loc = POP(branches);
+			line_word->words[else_loc]->offset = t - else_loc;
+			// Insert NOP to keep token number consistent.
+			word = afi_find(state->dict,"NOP");
+		}
 		else if(word == NULL)
 		{
 			char *end;
@@ -75,6 +120,7 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 			if(end == cur_tok) // If invalid token
 			{
 				free(line_word);
+				free(branches);
 				return -(t+1);
 			}
 			word = afi_defLiteral(literal);
@@ -83,7 +129,15 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 		line_word->words[t] = word;
 		cur_tok += strlen(cur_tok) + 1;
 	}
-	docol(line_word, state);
+	if(SIZE(branches) > 0) // If invalid token
+	{
+		free(line_word);
+		free(branches);
+		return -(num_toks+1);
+	}
+	free(branches);
+
+	docol(line_word, state); // Execute
 	free(line_word);
 	return 0;
 }
@@ -189,6 +243,8 @@ afi_State *afi_initState(size_t stack_size) {
 	afi_State *state = malloc(sizeof(afi_State));
 	state->args = afi_newStack(stack_size);
 	state->dict = afi_newNode();
+	afi_Entry *nop = afi_defPrimitive("NOP",do_nop);
+	state->dict = afi_addEntry(state->dict, nop);
 	return state;
 }
 
