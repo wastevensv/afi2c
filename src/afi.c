@@ -98,6 +98,38 @@ int afi_exec(afi_State *state, const char *buf, size_t buflen) {
 			word = afi_defBranch(strtol(cur_tok+7,NULL,10),true);
 			state->dict = afi_addEntry(state->dict, word);
 		}
+		// WHILE .. DO .. LOOP loop
+		else if(strcmp(cur_tok,"WHILE") == 0)
+		{
+			// Push location of WHILE onto stack.
+			PUSH(branches, t);
+			// Insert placeholder NOP.
+			word = afi_find(state->dict,"NOP");
+		}
+		else if(strcmp(cur_tok,"DO") == 0)
+		{
+			// Push location of DO onto stack.
+			PUSH(branches, t);
+			// Insert placeholder cond. branch.
+			word = afi_defBranch(0,true);
+			state->dict = afi_addEntry(state->dict, word);
+		}
+		else if(strcmp(cur_tok,"LOOP") == 0)
+		{
+			// Modify placeholder cond. branch to have proper offset.
+			if(SIZE(branches) < 1)
+			{
+				free(line_word);
+				free(branches);
+				return -(t+1);
+			}
+			afi_int_t do_loc = POP(branches);
+			afi_int_t while_loc = POP(branches);
+			line_word->words[do_loc]->offset = (t+1) - do_loc;
+			word = afi_defBranch((while_loc - t),false);
+			state->dict = afi_addEntry(state->dict, word);
+		}
+		// IF .. ELSE .. END branch
 		else if(strcmp(cur_tok,"IF") == 0)
 		{
 			// Push location of IF onto stack.
