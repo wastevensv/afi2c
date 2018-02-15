@@ -31,9 +31,7 @@ void do_div(afi_Entry *self, afi_State *state) {
 }
 
 void do_size(afi_Entry *self, afi_State *state) {
-	char str[16];
-	sprintf(str, "%ld", SIZE(state->args));
-	AFI_PUTS(str);
+	PUSH(state->args, SIZE(state->args));
 }
 
 void do_dotd(afi_Entry *self, afi_State *state) {
