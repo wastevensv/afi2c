@@ -5,7 +5,8 @@ SRC_DIR=src
 OBJ_DIR=obj
 BIN_DIR=bin
 
-CFLAGS=-Iinclude/ -Iinclude/hw/$(TARGET)
+CFLAGS=--std=c99
+CFLAGS+=-Iinclude/ -Iinclude/hw/$(TARGET)
 CFLAGS+=-MMD
 
 ifdef RELEASE
