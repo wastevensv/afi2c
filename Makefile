@@ -23,8 +23,11 @@ endif
 OBJS=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
 HWOBJS=$(patsubst $(SRC_DIR)/hw/$(TARGET)/%.c,$(OBJ_DIR)/hw/$(TARGET)/%.o,$(wildcard $(SRC_DIR)/hw/$(TARGET)/*.c))
 
-.PHONY: all clean clean-all
+.PHONY: all run clean clean-all
 all: $(BIN_DIR)/$(TARGET)
+
+run: $(BIN_DIR)/$(TARGET)
+	./$^
 
 $(BIN_DIR)/$(TARGET): $(HWOBJS) $(BIN_DIR)/afi.a
 	@mkdir -p bin

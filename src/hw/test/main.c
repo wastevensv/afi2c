@@ -93,5 +93,5 @@ int main(int argc, char *argv) {
 	int fails = run_tests(state);
 	fprintf(stderr,"%d tests failed.\n",fails);
 	afi_freeState(state);
-	return 0;
+	return fails;
 }
