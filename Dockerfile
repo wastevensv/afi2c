@@ -1,6 +1,5 @@
-FROM debian:buster
+FROM debian:latest as maker
 RUN apt-get -y update && \
-    apt-get -y upgrade && \
     apt-get -y install --no-install-recommends \
     	gcc \
 		libc6-dev \
@@ -15,4 +14,12 @@ WORKDIR /usr/src/project
 COPY . .
 RUN make clean && make RELEASE=y TARGET=test run
 RUN make RELEASE=y TARGET=linux && make clean
-ENTRYPOINT ["./bin/linux"]
+
+FROM debian:latest
+RUN apt-get -y update && \
+    apt-get -y install --no-install-recommends \
+        libreadline7 \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /root
+COPY --from=maker /usr/src/project/bin/linux /bin/afi2c
+CMD ["/bin/afi2c"]
