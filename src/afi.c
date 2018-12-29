@@ -49,7 +49,7 @@ void docol(afi_Entry *self, afi_State *state) {
 
 // Parse and execute a buffer of text.
 int afi_exec(afi_State *state, const char *buf, size_t buflen) {
-	char toks[buflen];
+	char toks[buflen+1];
 	size_t num_toks = 0;
 	int word_start = 0;
 	int word_end = 0;
